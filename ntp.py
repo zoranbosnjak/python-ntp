@@ -48,7 +48,7 @@ NMIN = 3
 NOSYNC = 3
 
 
-log = logging.getLogger("ntpy")
+log = logging.getLogger("ntp")
 
 
 def ntptime(t=None):
@@ -700,7 +700,7 @@ def argv_parser(progname=None):
     import argparse
 
     if progname is None:
-        _, _, progname = globals().get("__file__", "ntpy").rpartition("/")
+        progname = "ntp"
 
     parser = argparse.ArgumentParser(
         prog=progname,
