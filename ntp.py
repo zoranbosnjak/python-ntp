@@ -28,7 +28,7 @@ from datetime import datetime, timezone
 from ipaddress import IPv6Address, ip_address
 from random import random
 from socket import AF_INET, AF_INET6, SOCK_DGRAM
-from socket import socket, getaddrinfo, timeout, gaierror
+from socket import socket, getaddrinfo, gaierror
 from struct import pack, unpack
 from time import time, sleep
 
@@ -419,11 +419,13 @@ class NtpAssociation:
         )
         return self.outgoing.serialize()
 
-    def response_timeout(self, t=None):
+    def response_error(self, error, t=None):
+        # Communication errors, including timeouts, cause degradation
+        # of samples in the register and render the peer unfit.
         if t is None:
             t = time()
 
-        log.info("%s Timed out", self)
+        log.info("%s Communication error: %s", self, error)
 
         self.outgoing = NtpMessage(
             t=t,
@@ -489,11 +491,10 @@ class NtpAssociation:
             self.calculate_state(t)
             self.schedule_poll(1, t)
             log.debug("%s Update with %s", self, state)
-        except NtpUnsynchronizedError as e:
+        except NtpUnsynchronizedError:
             self.register.append(NtpState(t=t))
             self.calculate_state(t)
             self.schedule_poll(-1, t)
-            raise e
         except NtpError as e:
             self.schedule_poll(-1, t)
             log.info("%s %s", self, e.args[0])
@@ -570,8 +571,8 @@ class NtpArena:
                 log.debug("No more peers to query for now")
                 return diff
             s = self.sockv6 if p.ipv6 else self.sockv4
-            s.sendto(p.prepare_request(), p.address)
             try:
+                s.sendto(p.prepare_request(), p.address)
                 while True:
                     payload, address = s.recvfrom(4096)
                     t = time()
@@ -580,8 +581,8 @@ class NtpArena:
                         if response_callback:
                             response_callback()
                         break
-            except timeout:
-                p.response_timeout()
+            except OSError as e:
+                p.response_error(e)
         poll_q = sorted(self.peers.values(), key=lambda p: p.poll_t)
         return poll_q[0].poll_t - time()
 
