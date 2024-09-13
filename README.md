@@ -32,9 +32,16 @@ from ntp import NtpArena
 ntp = NtpArena(addresses=["217.114.59.66", "82.69.171.134"])
 
 while True:
+    # query_peers returns the advisory pause before the next poll.
+    # It handles network and NTP related errors.
     pause = ntp.query_peers()
-    leap, offset, jitter = ntp.calculate_state()
-    print(offset)
+    # calculate_state uses consensus algorithm to produce results.
+    # It raises NtpUnsynchronizedError if it cannot.
+    try:
+        leap, offset, jitter = ntp.calculate_state()
+        print(offset)
+    except NtpUnsynchronizedError:
+        pass
     sleep(pause)
 ```
 
