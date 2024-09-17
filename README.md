@@ -26,7 +26,7 @@ Intended use is a thread running in a loop:
 
 ```
 from time import sleep
-from ntp import NtpArena
+from ntp import NtpArena, NtpUnsynchronizedError
 
 # IPv4 of IPv6 addresses must be fed into NtpArena, hostnames must be resolved first.
 ntp = NtpArena(addresses=["217.114.59.66", "82.69.171.134"])
@@ -40,8 +40,8 @@ while True:
     try:
         leap, offset, jitter = ntp.calculate_state()
         print(offset)
-    except NtpUnsynchronizedError:
-        pass
+    except NtpUnsynchronizedError as e:
+        print('problem:', e)
     sleep(pause)
 ```
 
