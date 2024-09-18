@@ -545,6 +545,7 @@ class NtpArena:
     ):
         log.debug("Query peers")
         i = 0
+        min_poll = 2 ** MINPOLL
         start = time()
         poll_q = sorted(self.peers.values(), key=lambda p: p.poll_t)
         # Polling loop:
@@ -561,15 +562,15 @@ class NtpArena:
             i += 1
             if query_limit is not None and i > query_limit:
                 log.debug("Query limit reached")
-                return 0
+                return min_poll
             t = time()
             if time_limit is not None and t - start > time_limit:
                 log.debug("Time limit reached")
-                return 0
+                return min_poll
             diff = p.poll_t - t
             if diff > 1:
                 log.debug("No more peers to query for now")
-                return diff
+                return max(diff, min_poll)
             s = self.sockv6 if p.ipv6 else self.sockv4
             try:
                 s.sendto(p.prepare_request(), p.address)
@@ -584,7 +585,7 @@ class NtpArena:
             except OSError as e:
                 p.response_error(e)
         poll_q = sorted(self.peers.values(), key=lambda p: p.poll_t)
-        return poll_q[0].poll_t - time()
+        return max(poll_q[0].poll_t - time(), min_poll)
 
     def filter_clocks(self, edges, low, high):
         # Truechimers have their midpoint in the found interval.
