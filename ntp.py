@@ -506,13 +506,20 @@ class NtpArena:
         *,
         addresses,
         socket_timeout=5.0,
+        precision=PRECISION,
+        tolerance=TOLERANCE,
+        start_randomization=5.0,
         max_poll=None
     ):
         needs_ipv4 = False
         needs_ipv6 = False
         self.peers = {}
         for i in set(addresses):
-            p = NtpAssociation(address=i, max_poll=max_poll)
+            p = NtpAssociation(address=i,
+                    precision=precision,
+                    tolerance=tolerance,
+                    start_randomization=start_randomization,
+                    max_poll=max_poll)
             self.peers[p.address] = p
             if p.ipv6:
                 needs_ipv6 = True
