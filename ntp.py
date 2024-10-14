@@ -291,7 +291,7 @@ class NtpAssociation:
         port=123,
         precision=PRECISION,
         tolerance=TOLERANCE,
-        start_randomization=5.0,
+        start_randomization=0.0,
         max_poll=None
     ):
         ip = ip_address(address)
@@ -508,7 +508,7 @@ class NtpArena:
         socket_timeout=5.0,
         precision=PRECISION,
         tolerance=TOLERANCE,
-        start_randomization=5.0,
+        start_randomization=0.0,
         max_poll=None
     ):
         needs_ipv4 = False
